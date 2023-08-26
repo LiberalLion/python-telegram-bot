@@ -213,9 +213,9 @@ class ConversationHandler(Handler[Update]):
         Set by dispatcher"""
         self._map_to_parent = map_to_parent
 
-        self.timeout_jobs: Dict[Tuple[int, ...], 'Job'] = dict()
+        self.timeout_jobs: Dict[Tuple[int, ...], 'Job'] = {}
         self._timeout_jobs_lock = Lock()
-        self._conversations: ConversationDict = dict()
+        self._conversations: ConversationDict = {}
         self._conversations_lock = Lock()
 
         self.logger = logging.getLogger(__name__)
@@ -229,15 +229,14 @@ class ConversationHandler(Handler[Update]):
                 "since message IDs are not globally unique."
             )
 
-        all_handlers = list()
-        all_handlers.extend(entry_points)
+        all_handlers = list(entry_points)
         all_handlers.extend(fallbacks)
 
         for state_handlers in states.values():
             all_handlers.extend(state_handlers)
 
-        if self.per_message:
-            for handler in all_handlers:
+        for handler in all_handlers:
+            if self.per_message:
                 if not isinstance(handler, CallbackQueryHandler):
                     warnings.warn(
                         "If 'per_message=True', all entry points and state handlers"
@@ -245,14 +244,12 @@ class ConversationHandler(Handler[Update]):
                         "have a message context."
                     )
                     break
-        else:
-            for handler in all_handlers:
-                if isinstance(handler, CallbackQueryHandler):
-                    warnings.warn(
-                        "If 'per_message=False', 'CallbackQueryHandler' will not be "
-                        "tracked for every message."
-                    )
-                    break
+            elif isinstance(handler, CallbackQueryHandler):
+                warnings.warn(
+                    "If 'per_message=False', 'CallbackQueryHandler' will not be "
+                    "tracked for every message."
+                )
+                break
 
         if self.per_chat:
             for handler in all_handlers:
@@ -372,12 +369,12 @@ class ConversationHandler(Handler[Update]):
                     handler.conversations = self.persistence.get_conversations(handler.name)
 
     def _get_key(self, update: Update) -> Tuple[int, ...]:
-        chat = update.effective_chat
         user = update.effective_user
 
-        key = list()
+        key = []
 
         if self.per_chat:
+            chat = update.effective_chat
             key.append(chat.id)  # type: ignore[union-attr]
 
         if self.per_user and user is not None:

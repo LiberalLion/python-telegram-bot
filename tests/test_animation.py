@@ -30,9 +30,8 @@ from telegram.utils.helpers import escape_markdown
 
 @pytest.fixture(scope='function')
 def animation_file():
-    f = open('tests/data/game.gif', 'rb')
-    yield f
-    f.close()
+    with open('tests/data/game.gif', 'rb') as f:
+        yield f
 
 
 @pytest.fixture(scope='class')

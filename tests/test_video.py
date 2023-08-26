@@ -29,9 +29,8 @@ from telegram.utils.helpers import escape_markdown
 
 @pytest.fixture(scope='function')
 def video_file():
-    f = open('tests/data/telegram.mp4', 'rb')
-    yield f
-    f.close()
+    with open('tests/data/telegram.mp4', 'rb') as f:
+        yield f
 
 
 @pytest.fixture(scope='class')

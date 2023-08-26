@@ -187,9 +187,7 @@ class DictPersistence(BasePersistence):
         Returns:
             :obj:`defaultdict`: The restored user data.
         """
-        if self.user_data:
-            pass
-        else:
+        if not self.user_data:
             self._user_data = defaultdict(dict)
         return deepcopy(self.user_data)  # type: ignore[arg-type]
 
@@ -200,9 +198,7 @@ class DictPersistence(BasePersistence):
         Returns:
             :obj:`defaultdict`: The restored chat data.
         """
-        if self.chat_data:
-            pass
-        else:
+        if not self.chat_data:
             self._chat_data = defaultdict(dict)
         return deepcopy(self.chat_data)  # type: ignore[arg-type]
 
@@ -212,9 +208,7 @@ class DictPersistence(BasePersistence):
         Returns:
             :obj:`dict`: The restored bot data.
         """
-        if self.bot_data:
-            pass
-        else:
+        if not self.bot_data:
             self._bot_data = {}
         return deepcopy(self.bot_data)  # type: ignore[arg-type]
 
@@ -225,9 +219,7 @@ class DictPersistence(BasePersistence):
         Returns:
             :obj:`dict`: The restored conversations data.
         """
-        if self.conversations:
-            pass
-        else:
+        if not self.conversations:
             self._conversations = {}
         return self.conversations.get(name, {}).copy()  # type: ignore[union-attr]
 

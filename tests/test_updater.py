@@ -404,7 +404,7 @@ class TestUpdater:
             # 2nd call from bootstrap____clean
             # we should be called with offset = 4
             # save value passed in self.offset for assert down below
-            if len(args) > 0:
+            if args:
                 self.offset = int(args[0])
                 return []
 

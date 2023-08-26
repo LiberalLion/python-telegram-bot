@@ -111,11 +111,11 @@ def parse_file_input(
     if isinstance(file_input, str) and file_input.startswith('file://'):
         return file_input
     if isinstance(file_input, (str, Path)):
-        if is_local_file(file_input):
-            out = Path(file_input).absolute().as_uri()
-        else:
-            out = file_input  # type: ignore[assignment]
-        return out
+        return (
+            Path(file_input).absolute().as_uri()
+            if is_local_file(file_input)
+            else file_input
+        )
     if isinstance(file_input, bytes):
         return InputFile(file_input, attach=attach, filename=filename)
     if InputFile.is_file(file_input):
@@ -139,10 +139,10 @@ def escape_markdown(text: str, version: int = 1, entity_type: str = None) -> str
             See the official API documentation for details. Only valid in combination with
             ``version=2``, will be ignored else.
     """
-    if int(version) == 1:
+    if version == 1:
         escape_chars = r'_*`['
-    elif int(version) == 2:
-        if entity_type in ['pre', 'code']:
+    elif version == 2:
+        if entity_type in {'pre', 'code'}:
             escape_chars = r'\`'
         elif entity_type == 'text_link':
             escape_chars = r'\)'
@@ -306,7 +306,7 @@ def mention_html(user_id: Union[int, str], name: str) -> str:
     Returns:
         :obj:`str`: The inline mention for the user as html.
     """
-    return u'<a href="tg://user?id={}">{}</a>'.format(user_id, escape(name))
+    return f'<a href="tg://user?id={user_id}">{escape(name)}</a>'
 
 
 def mention_markdown(user_id: Union[int, str], name: str, version: int = 1) -> str:
@@ -346,11 +346,9 @@ def effective_message_type(entity: Union['Message', 'Update']) -> Optional[str]:
     else:
         raise TypeError(f"entity is not Message or Update (got: {type(entity)})")
 
-    for i in Message.MESSAGE_TYPES:
-        if getattr(message, i, None):
-            return i
-
-    return None
+    return next(
+        (i for i in Message.MESSAGE_TYPES if getattr(message, i, None)), None
+    )
 
 
 def create_deep_linked_url(bot_username: str, payload: str = None, group: bool = False) -> str:
@@ -393,11 +391,7 @@ def create_deep_linked_url(bot_username: str, payload: str = None, group: bool =
             "URLs: A-Z, a-z, 0-9, _ and -"
         )
 
-    if group:
-        key = 'startgroup'
-    else:
-        key = 'start'
-
+    key = 'startgroup' if group else 'start'
     return f'{base_url}?{key}={payload}'
 
 
@@ -411,11 +405,10 @@ def encode_conversations_to_json(conversations: Dict[str, Dict[Tuple, Any]]) -> 
     Returns:
         :obj:`str`: The JSON-serialized conversations dict
     """
-    tmp: Dict[str, JSONDict] = {}
-    for handler, states in conversations.items():
-        tmp[handler] = {}
-        for key, state in states.items():
-            tmp[handler][json.dumps(key)] = state
+    tmp: Dict[str, JSONDict] = {
+        handler: {json.dumps(key): state for key, state in states.items()}
+        for handler, states in conversations.items()
+    }
     return json.dumps(tmp)
 
 
@@ -430,11 +423,12 @@ def decode_conversations_from_json(json_string: str) -> Dict[str, Dict[Tuple, An
         :obj:`dict`: The conversations dict after decoding
     """
     tmp = json.loads(json_string)
-    conversations: Dict[str, Dict[Tuple, Any]] = {}
-    for handler, states in tmp.items():
-        conversations[handler] = {}
-        for key, state in states.items():
-            conversations[handler][tuple(json.loads(key))] = state
+    conversations: Dict[str, Dict[Tuple, Any]] = {
+        handler: {
+            tuple(json.loads(key)): state for key, state in states.items()
+        }
+        for handler, states in tmp.items()
+    }
     return conversations
 
 

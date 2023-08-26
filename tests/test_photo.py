@@ -31,9 +31,8 @@ from tests.conftest import expect_bad_request
 
 @pytest.fixture(scope='function')
 def photo_file():
-    f = open(u'tests/data/telegram.jpg', 'rb')
-    yield f
-    f.close()
+    with open(u'tests/data/telegram.jpg', 'rb') as f:
+        yield f
 
 
 @pytest.fixture(scope='class')

@@ -41,8 +41,7 @@ from collections import defaultdict
 
 @pytest.fixture(scope='function')
 def dp2(bot):
-    for dp in create_dp(bot):
-        yield dp
+    yield from create_dp(bot)
 
 
 class TestDispatcher:
@@ -561,6 +560,8 @@ class TestDispatcher:
     def test_error_while_saving_chat_data(self, bot):
         increment = []
 
+
+
         class OwnPersistence(BasePersistence):
             def __init__(self):
                 super().__init__()
@@ -569,7 +570,7 @@ class TestDispatcher:
                 self.store_bot_data = True
 
             def get_bot_data(self):
-                return dict()
+                return {}
 
             def update_bot_data(self, data):
                 raise Exception
@@ -591,6 +592,7 @@ class TestDispatcher:
 
             def update_conversation(self, name, key, new_state):
                 pass
+
 
         def start1(b, u):
             pass

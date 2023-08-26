@@ -724,7 +724,9 @@ class TestBot:
         def make_assertion(url, data, *args, **kwargs):
             results = data['results']
             length_matches = len(results) == num_results
-            ids_match = all([int(res['id']) == id_offset + i for i, res in enumerate(results)])
+            ids_match = all(
+                int(res['id']) == id_offset + i for i, res in enumerate(results)
+            )
             next_offset_matches = data['next_offset'] == str(expected_next_offset)
             return length_matches and ids_match and next_offset_matches
 
@@ -737,7 +739,7 @@ class TestBot:
         def make_assertion(url, data, *args, **kwargs):
             results = data['results']
             length_matches = len(results) == MAX_INLINE_QUERY_RESULTS
-            ids_match = all([int(res['id']) == 1 + i for i, res in enumerate(results)])
+            ids_match = all(int(res['id']) == 1 + i for i, res in enumerate(results))
             next_offset_matches = data['next_offset'] == '1'
             return length_matches and ids_match and next_offset_matches
 
@@ -750,7 +752,7 @@ class TestBot:
         def make_assertion(url, data, *args, **kwargs):
             results = data['results']
             length_matches = len(results) == 30
-            ids_match = all([int(res['id']) == 1 + i for i, res in enumerate(results)])
+            ids_match = all(int(res['id']) == 1 + i for i, res in enumerate(results))
             next_offset_matches = data['next_offset'] == ''
             return length_matches and ids_match and next_offset_matches
 
@@ -763,7 +765,7 @@ class TestBot:
         def make_assertion(url, data, *args, **kwargs):
             results = data['results']
             length = len(results) == 5
-            ids = all([int(res['id']) == 6 + i for i, res in enumerate(results)])
+            ids = all(int(res['id']) == 6 + i for i, res in enumerate(results))
             next_offset = data['next_offset'] == '2'
             return length and ids and next_offset
 
@@ -1504,7 +1506,7 @@ class TestBot:
     @flaky(3, 1)
     @pytest.mark.timeout(10)
     def test_set_chat_description(self, bot, channel_id):
-        assert bot.set_chat_description(channel_id, 'Time: ' + str(time.time()))
+        assert bot.set_chat_description(channel_id, f'Time: {str(time.time())}')
 
     # TODO: Add bot to group to test there too
     @flaky(3, 1)

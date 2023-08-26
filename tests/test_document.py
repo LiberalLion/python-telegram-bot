@@ -29,9 +29,8 @@ from telegram.utils.helpers import escape_markdown
 
 @pytest.fixture(scope='function')
 def document_file():
-    f = open('tests/data/telegram.png', 'rb')
-    yield f
-    f.close()
+    with open('tests/data/telegram.png', 'rb') as f:
+        yield f
 
 
 @pytest.fixture(scope='class')

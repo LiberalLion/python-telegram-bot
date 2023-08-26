@@ -28,9 +28,8 @@ from telegram.error import BadRequest
 
 @pytest.fixture(scope='function')
 def video_note_file():
-    f = open('tests/data/telegram2.mp4', 'rb')
-    yield f
-    f.close()
+    with open('tests/data/telegram2.mp4', 'rb') as f:
+        yield f
 
 
 @pytest.fixture(scope='class')

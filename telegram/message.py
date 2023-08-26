@@ -365,7 +365,7 @@ class Message(TelegramObject):
         **_kwargs: Any,
     ):
         # Required
-        self.message_id = int(message_id)
+        self.message_id = message_id
         # Optionals
         self.from_user = from_user
         self.sender_chat = sender_chat
@@ -377,12 +377,12 @@ class Message(TelegramObject):
         self.reply_to_message = reply_to_message
         self.edit_date = edit_date
         self.text = text
-        self.entities = entities or list()
-        self.caption_entities = caption_entities or list()
+        self.entities = entities or []
+        self.caption_entities = caption_entities or []
         self.audio = audio
         self.game = game
         self.document = document
-        self.photo = photo or list()
+        self.photo = photo or []
         self.sticker = sticker
         self.video = video
         self.voice = voice
@@ -391,16 +391,16 @@ class Message(TelegramObject):
         self.contact = contact
         self.location = location
         self.venue = venue
-        self.new_chat_members = new_chat_members or list()
+        self.new_chat_members = new_chat_members or []
         self.left_chat_member = left_chat_member
         self.new_chat_title = new_chat_title
-        self.new_chat_photo = new_chat_photo or list()
-        self.delete_chat_photo = bool(delete_chat_photo)
-        self.group_chat_created = bool(group_chat_created)
-        self.supergroup_chat_created = bool(supergroup_chat_created)
+        self.new_chat_photo = new_chat_photo or []
+        self.delete_chat_photo = delete_chat_photo
+        self.group_chat_created = group_chat_created
+        self.supergroup_chat_created = supergroup_chat_created
         self.migrate_to_chat_id = migrate_to_chat_id
         self.migrate_from_chat_id = migrate_from_chat_id
-        self.channel_chat_created = bool(channel_chat_created)
+        self.channel_chat_created = channel_chat_created
         self.pinned_message = pinned_message
         self.forward_from_message_id = forward_from_message_id
         self.invoice = invoice
@@ -526,13 +526,14 @@ class Message(TelegramObject):
         if self._effective_attachment is not _UNDEFINED:
             return self._effective_attachment  # type: ignore
 
-        for i in Message.ATTACHMENT_TYPES:
-            if getattr(self, i, None):
-                self._effective_attachment = getattr(self, i)
-                break
-        else:
-            self._effective_attachment = None
-
+        self._effective_attachment = next(
+            (
+                getattr(self, i)
+                for i in Message.ATTACHMENT_TYPES
+                if getattr(self, i, None)
+            ),
+            None,
+        )
         return self._effective_attachment  # type: ignore
 
     def __getitem__(self, item: str) -> Any:  # pylint: disable=R1710
@@ -577,10 +578,7 @@ class Message(TelegramObject):
             del kwargs['quote']
 
         else:
-            if self.bot.defaults:
-                default_quote = self.bot.defaults.quote
-            else:
-                default_quote = None
+            default_quote = self.bot.defaults.quote if self.bot.defaults else None
             if (default_quote is None and self.chat.type != Chat.PRIVATE) or default_quote:
                 kwargs['reply_to_message_id'] = self.message_id
 
@@ -1396,30 +1394,33 @@ class Message(TelegramObject):
                 elif entity.type == MessageEntity.URL and urled:
                     insert = f'<a href="{text}">{text}</a>'
                 elif entity.type == MessageEntity.BOLD:
-                    insert = '<b>' + text + '</b>'
+                    insert = f'<b>{text}</b>'
                 elif entity.type == MessageEntity.ITALIC:
-                    insert = '<i>' + text + '</i>'
+                    insert = f'<i>{text}</i>'
                 elif entity.type == MessageEntity.CODE:
-                    insert = '<code>' + text + '</code>'
+                    insert = f'<code>{text}</code>'
                 elif entity.type == MessageEntity.PRE:
                     if entity.language:
                         insert = f'<pre><code class="{entity.language}">{text}</code></pre>'
                     else:
-                        insert = '<pre>' + text + '</pre>'
+                        insert = f'<pre>{text}</pre>'
                 elif entity.type == MessageEntity.UNDERLINE:
-                    insert = '<u>' + text + '</u>'
+                    insert = f'<u>{text}</u>'
                 elif entity.type == MessageEntity.STRIKETHROUGH:
-                    insert = '<s>' + text + '</s>'
+                    insert = f'<s>{text}</s>'
                 else:
                     insert = text
 
                 if offset == 0:
-                    if sys.maxunicode == 0xFFFF:
-                        html_text += (
-                            escape(message_text[last_offset : entity.offset - offset]) + insert
+                    html_text += (
+                        (
+                            escape(
+                                message_text[last_offset : entity.offset - offset]
+                            )
+                            + insert
                         )
-                    else:
-                        html_text += (
+                        if sys.maxunicode == 0xFFFF
+                        else (
                             escape(
                                 message_text[  # type: ignore
                                     last_offset * 2 : (entity.offset - offset) * 2
@@ -1427,31 +1428,31 @@ class Message(TelegramObject):
                             )
                             + insert
                         )
+                    )
+                elif sys.maxunicode == 0xFFFF:
+                    html_text += message_text[last_offset : entity.offset - offset] + insert
                 else:
-                    if sys.maxunicode == 0xFFFF:
-                        html_text += message_text[last_offset : entity.offset - offset] + insert
-                    else:
-                        html_text += (
-                            message_text[  # type: ignore
-                                last_offset * 2 : (entity.offset - offset) * 2
-                            ].decode('utf-16-le')
-                            + insert
-                        )
+                    html_text += (
+                        message_text[  # type: ignore
+                            last_offset * 2 : (entity.offset - offset) * 2
+                        ].decode('utf-16-le')
+                        + insert
+                    )
 
                 last_offset = entity.offset - offset + entity.length
 
         if offset == 0:
-            if sys.maxunicode == 0xFFFF:
-                html_text += escape(message_text[last_offset:])
-            else:
-                html_text += escape(
+            html_text += (
+                escape(message_text[last_offset:])
+                if sys.maxunicode == 0xFFFF
+                else escape(
                     message_text[last_offset * 2 :].decode('utf-16-le')  # type: ignore
                 )
+            )
+        elif sys.maxunicode == 0xFFFF:
+            html_text += message_text[last_offset:]
         else:
-            if sys.maxunicode == 0xFFFF:
-                html_text += message_text[last_offset:]
-            else:
-                html_text += message_text[last_offset * 2 :].decode('utf-16-le')  # type: ignore
+            html_text += message_text[last_offset * 2 :].decode('utf-16-le')  # type: ignore
 
         return html_text
 
